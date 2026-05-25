@@ -14,6 +14,8 @@
     <Compile Include="Words.fs" />
     <Compile Include="WordGame.fs" />
     <Compile Include="MemoryGame.fs" />
+    <Compile Include="FoodRoulette.fs" />
+    <Compile Include="Audio.fs" />
     <Compile Include="App.fs" />
     <Compile Include="View.fs" />
     <Compile Include="Program.fs" />
@@ -31,6 +33,7 @@
     <PackageReference Include="Avalonia.FuncUI" Version="1.5.1" />
     <PackageReference Include="Avalonia.FuncUI.Elmish" Version="1.5.1" />
     <PackageReference Include="Elmish" Version="4.2.0" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="Tmds.DBus.Protocol" Version="0.93.0" />
   </ItemGroup>
 

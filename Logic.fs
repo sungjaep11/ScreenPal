@@ -28,6 +28,9 @@ let tickAsleep stats =
 let feed stats =
     { stats with Hunger = clamp (stats.Hunger + FeedHungerGain) }
 
+let feedBy amount stats =
+    { stats with Hunger = clamp (stats.Hunger + amount) }
+
 let canFeed life sleep stats =
     life = Alive && sleep = Awake && stats.Hunger < MaxStat
 

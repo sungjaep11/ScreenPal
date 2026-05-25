@@ -7,6 +7,7 @@ type Screen =
     | NameEntry of input: string
     | MainView
     | InPlayMenu
+    | InFoodRoulette of FoodRoulette.State
     | InMemoryGame of MemoryGame.State
     | InWordGame of WordGame.State
 
@@ -33,6 +34,10 @@ type Msg =
     | NameChanged of string
     | ConfirmName
     | Feed
+    | SpinFood
+    | FoodSpinTick
+    | EatChosenFood
+    | CloseFoodRoulette
     | ToggleSleep
     | OpenPlayMenu
     | ClosePlayMenu
@@ -221,6 +226,17 @@ let private delayedUnflipCmd : Cmd<Msg> =
         |> Async.StartImmediate
     Cmd.ofEffect work
 
+let FoodSpinFrameMs = 16
+
+let private foodSpinTickCmd : Cmd<Msg> =
+    let work dispatch =
+        async {
+            do! Async.Sleep FoodSpinFrameMs
+            dispatch FoodSpinTick
+        }
+        |> Async.StartImmediate
+    Cmd.ofEffect work
+
 let private handleTick (model: Model) : Model =
     if System.String.IsNullOrWhiteSpace model.Name then model
     else
@@ -285,9 +301,36 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
             m', saveCmd m'
 
     | Feed, MainView when Logic.canFeed model.Life model.Sleep model.Stats ->
-        let fed = { model with Stats = Logic.feed model.Stats }
-        let m' = withDialogue fed (pickRandom model.Rng feedDialogues)
+        let state = FoodRoulette.init model.Rng
+        { model with Screen = InFoodRoulette state }, Cmd.none
+
+    | SpinFood, InFoodRoulette state when state.Phase = FoodRoulette.Ready ->
+        let now = System.DateTimeOffset.UtcNow
+        let state' = FoodRoulette.start model.Rng now state
+        Audio.playRouletteSpin ()
+        { model with Screen = InFoodRoulette state' }, foodSpinTickCmd
+
+    | FoodSpinTick, InFoodRoulette state when FoodRoulette.isSpinning state ->
+        let now = System.DateTimeOffset.UtcNow
+        let state' = FoodRoulette.advance now state
+        let stillSpinning = FoodRoulette.isSpinning state'
+        if not stillSpinning then Audio.stopRouletteSpin ()
+        let cmd = if stillSpinning then foodSpinTickCmd else Cmd.none
+        { model with Screen = InFoodRoulette state' }, cmd
+
+    | FoodSpinTick, _ -> model, Cmd.none
+
+    | EatChosenFood, InFoodRoulette state when FoodRoulette.isLanded state ->
+        let food = FoodRoulette.currentFood state
+        let stats' = Logic.feedBy food.HungerGain model.Stats
+        let fed = { model with Stats = stats'; Screen = MainView }
+        let m' = withDialogue fed (sprintf "%s %s!" (pickRandom model.Rng feedDialogues) food.Name)
+        Audio.stopRouletteSpin ()
         m', saveCmd m'
+
+    | CloseFoodRoulette, InFoodRoulette _ ->
+        Audio.stopRouletteSpin ()
+        { model with Screen = MainView }, Cmd.none
 
     | GameDialogueTick, InMemoryGame _ ->
         withDialogue model (pickRandom model.Rng memoryGameDialogues), Cmd.none

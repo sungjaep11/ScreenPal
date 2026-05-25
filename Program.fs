@@ -3,6 +3,7 @@ module ScreenPal.Program
 open Avalonia
 open Avalonia.Controls
 open Avalonia.Controls.ApplicationLifetimes
+open Avalonia.Interactivity
 open Avalonia.Media
 open Avalonia.Styling
 open Avalonia.Themes.Fluent
@@ -104,7 +105,24 @@ type App() =
             let pet = PetWindow()
             let main = MainWindow()
 
-            App.shutdownAction <- (fun () -> desktop.Shutdown(0))
+            Audio.init ()
+
+            let clickHandler =
+                System.EventHandler<RoutedEventArgs>(fun _ args ->
+                    let isSilent =
+                        match args.Source with
+                        | :? Control as c ->
+                            match c.Tag with
+                            | :? string as t -> t = "silent"
+                            | _ -> false
+                        | _ -> false
+                    if not isSilent then Audio.playButtonPress ())
+            main.AddHandler(Button.ClickEvent, clickHandler, RoutingStrategies.Bubble)
+
+            App.shutdownAction <- (fun () ->
+                Audio.stopRouletteSpin ()
+                Audio.stopBackgroundMusic ()
+                desktop.Shutdown(0))
 
             pet.Opened.Add(fun _ ->
                 match pet.Screens.Primary with
@@ -132,9 +150,11 @@ type App() =
                         pet.Hide()
                         main.Show()
                         main.Activate()
+                        Audio.playBackgroundMusic ()
                     else
                         main.Hide()
                         pet.Show()
+                        Audio.stopBackgroundMusic ()
                     lastShowMain <- model.ShowMain
 
             desktop.MainWindow <- pet

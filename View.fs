@@ -456,6 +456,222 @@ let playMenuView (model: Model) (dispatch: Msg -> unit) : IView =
         ]
     ] :> IView
 
+// ----- Food roulette view -----
+
+let private FoodCellWidth = 96.0
+let private FoodCellHeight = 116.0
+let private FoodCellGap = 8.0
+let private FoodSlotPitch = FoodCellWidth + FoodCellGap
+let private FoodVisibleCount = 5
+let private FoodRenderHalf = 4
+let private FoodReelInnerWidth = FoodSlotPitch * float FoodVisibleCount
+let private FoodReelInnerHeight = FoodCellHeight + 16.0
+let private FoodCellY = (FoodReelInnerHeight - FoodCellHeight) / 2.0
+
+let private foodCell (food: FoodRoulette.Food) (isCenter: bool) (landed: bool) (x: float) : IView =
+    let bgColor =
+        if landed && isCenter then Color.Parse("#FFE066")
+        else Color.Parse("#FFFBEA")
+    let emojiSize = if isCenter then 52.0 else 38.0
+    let gainSize = if isCenter then 11.0 else 9.0
+    Border.create [
+        Border.width FoodCellWidth
+        Border.height FoodCellHeight
+        Border.background (SolidColorBrush(bgColor) :> IBrush)
+        Border.borderBrush (SolidColorBrush(Color.Parse("#1A1A1A")) :> IBrush)
+        Border.borderThickness 2.0
+        Border.cornerRadius 6.0
+        Canvas.left x
+        Canvas.top FoodCellY
+        Border.child (
+            StackPanel.create [
+                StackPanel.orientation Orientation.Vertical
+                StackPanel.horizontalAlignment HorizontalAlignment.Center
+                StackPanel.verticalAlignment VerticalAlignment.Center
+                StackPanel.spacing 4.0
+                StackPanel.children [
+                    TextBlock.create [
+                        TextBlock.text food.Emoji
+                        TextBlock.fontFamily emojiFont
+                        TextBlock.fontSize emojiSize
+                        TextBlock.horizontalAlignment HorizontalAlignment.Center
+                        TextBlock.textAlignment TextAlignment.Center
+                    ]
+                    TextBlock.create [
+                        TextBlock.text (sprintf "+%d" food.HungerGain)
+                        TextBlock.fontFamily pixelFont
+                        TextBlock.fontSize gainSize
+                        TextBlock.foreground (SolidColorBrush(Color.Parse("#1A1A1A")) :> IBrush)
+                        TextBlock.horizontalAlignment HorizontalAlignment.Center
+                        TextBlock.textAlignment TextAlignment.Center
+                    ]
+                ]
+            ]
+        )
+    ] :> IView
+
+let private centerHighlightFrame (landed: bool) (x: float) : IView =
+    let strokeColor = if landed then Color.Parse("#E63946") else Color.Parse("#1A1A1A")
+    let strokeThick = if landed then 4.0 else 3.0
+    Border.create [
+        Border.width FoodCellWidth
+        Border.height FoodCellHeight
+        Border.background Brushes.Transparent
+        Border.borderBrush (SolidColorBrush(strokeColor) :> IBrush)
+        Border.borderThickness strokeThick
+        Border.cornerRadius 6.0
+        Border.isHitTestVisible false
+        Canvas.left x
+        Canvas.top FoodCellY
+    ] :> IView
+
+let private foodReel (state: FoodRoulette.State) : IView =
+    let landed = FoodRoulette.isLanded state
+    let centerX = FoodReelInnerWidth / 2.0
+    let frameX = centerX - FoodCellWidth / 2.0
+    Border.create [
+        Border.background (SolidColorBrush(Color.Parse("#FFF7D6")) :> IBrush)
+        Border.borderBrush (SolidColorBrush(Color.Parse("#1A1A1A")) :> IBrush)
+        Border.borderThickness 3.0
+        Border.cornerRadius 6.0
+        Border.padding (Thickness(12.0, 12.0, 12.0, 14.0))
+        Border.horizontalAlignment HorizontalAlignment.Center
+        Border.child (
+            StackPanel.create [
+                StackPanel.orientation Orientation.Vertical
+                StackPanel.horizontalAlignment HorizontalAlignment.Center
+                StackPanel.spacing 4.0
+                StackPanel.children [
+                    TextBlock.create [
+                        TextBlock.text "▼"
+                        TextBlock.fontFamily pixelFont
+                        TextBlock.fontSize 14.0
+                        TextBlock.foreground (SolidColorBrush(Color.Parse("#E63946")) :> IBrush)
+                        TextBlock.horizontalAlignment HorizontalAlignment.Center
+                    ]
+                    Border.create [
+                        Border.width FoodReelInnerWidth
+                        Border.height FoodReelInnerHeight
+                        Border.background (SolidColorBrush(Color.Parse("#FFEFC2")) :> IBrush)
+                        Border.borderBrush (SolidColorBrush(Color.Parse("#1A1A1A")) :> IBrush)
+                        Border.borderThickness 2.0
+                        Border.cornerRadius 4.0
+                        Border.clipToBounds true
+                        Border.child (
+                            Canvas.create [
+                                Canvas.width FoodReelInnerWidth
+                                Canvas.height FoodReelInnerHeight
+                                Canvas.background Brushes.Transparent
+                                Canvas.children [
+                                    for offset in -FoodRenderHalf .. FoodRenderHalf do
+                                        let x =
+                                            centerX
+                                            + (float offset - state.ScrollFrac) * FoodSlotPitch
+                                            - FoodCellWidth / 2.0
+                                        foodCell
+                                            (FoodRoulette.foodAtOffset state offset)
+                                            (offset = 0 && landed)
+                                            landed
+                                            x
+                                    centerHighlightFrame landed frameX
+                                ]
+                            ]
+                        )
+                    ] :> IView
+                ]
+            ]
+        )
+    ] :> IView
+
+let foodRouletteView (model: Model) (state: FoodRoulette.State) (dispatch: Msg -> unit) : IView =
+    let landed = FoodRoulette.isLanded state
+    let spinning = FoodRoulette.isSpinning state
+    let chosen = FoodRoulette.currentFood state
+    let statusText =
+        match state.Phase with
+        | FoodRoulette.Ready -> sprintf "Spin to pick %s's snack!" model.Name
+        | FoodRoulette.Spinning -> "Spinning..."
+        | FoodRoulette.Landed -> sprintf "%s %s — +%d hunger!" chosen.Emoji chosen.Name chosen.HungerGain
+
+    let primaryButton =
+        match state.Phase with
+        | FoodRoulette.Ready ->
+            Button.create [
+                Button.content "🎰 Spin!"
+                Button.fontFamily pixelFont
+                Button.fontSize 12.0
+                Button.minWidth 160.0
+                Button.padding (16.0, 10.0, 16.0, 16.0)
+                Button.onClick (fun _ -> dispatch SpinFood)
+            ] :> IView
+        | FoodRoulette.Spinning ->
+            Button.create [
+                Button.content "Spinning..."
+                Button.fontFamily pixelFont
+                Button.fontSize 12.0
+                Button.minWidth 160.0
+                Button.padding (16.0, 10.0, 16.0, 16.0)
+                Button.isEnabled false
+            ] :> IView
+        | FoodRoulette.Landed ->
+            Button.create [
+                Button.content (sprintf "Eat %s!" chosen.Name)
+                Button.fontFamily pixelFont
+                Button.fontSize 12.0
+                Button.minWidth 160.0
+                Button.padding (16.0, 10.0, 16.0, 16.0)
+                Button.onClick (fun _ -> dispatch EatChosenFood)
+            ] :> IView
+
+    DockPanel.create [
+        DockPanel.margin 16.0
+        DockPanel.children [
+            StackPanel.create [
+                DockPanel.dock Dock.Bottom
+                StackPanel.orientation Orientation.Horizontal
+                StackPanel.horizontalAlignment HorizontalAlignment.Center
+                StackPanel.spacing 12.0
+                StackPanel.margin (0.0, 16.0, 0.0, 0.0)
+                StackPanel.children [
+                    primaryButton
+                    Button.create [
+                        Button.content (if landed then "Skip" else "Quit")
+                        Button.fontFamily pixelFont
+                        Button.fontSize 12.0
+                        Button.minWidth 120.0
+                        Button.padding (16.0, 10.0, 16.0, 16.0)
+                        Button.isEnabled (not spinning)
+                        Button.onClick (fun _ -> dispatch CloseFoodRoulette)
+                    ]
+                ]
+            ]
+            StackPanel.create [
+                StackPanel.orientation Orientation.Vertical
+                StackPanel.spacing 8.0
+                StackPanel.horizontalAlignment HorizontalAlignment.Center
+                StackPanel.verticalAlignment VerticalAlignment.Center
+                StackPanel.children [
+                    TextBlock.create [
+                        TextBlock.text "🎰 Snack Time!"
+                        TextBlock.fontFamily pixelFont
+                        TextBlock.fontSize 18.0
+                        TextBlock.foreground (SolidColorBrush(Color.Parse("#1A1A1A")) :> IBrush)
+                        TextBlock.horizontalAlignment HorizontalAlignment.Center
+                    ]
+                    TextBlock.create [
+                        TextBlock.text statusText
+                        TextBlock.fontFamily pixelFont
+                        TextBlock.fontSize 10.0
+                        TextBlock.foreground (SolidColorBrush(Color.Parse("#1A1A1A")) :> IBrush)
+                        TextBlock.horizontalAlignment HorizontalAlignment.Center
+                        TextBlock.margin (0.0, 0.0, 0.0, 4.0)
+                    ]
+                    foodReel state
+                ]
+            ]
+        ]
+    ] :> IView
+
 // ----- Memory game view -----
 
 let private memoryCardButton (card: MemoryGame.Card) (locked: bool) (dispatch: MemoryGame.Msg -> unit) : IView =
@@ -489,6 +705,7 @@ let private memoryCardButton (card: MemoryGame.Card) (locked: bool) (dispatch: M
         Button.height 78.0
         Button.margin 4.0
         Button.padding (Thickness(0.0))
+        Button.tag "silent"
         Button.horizontalContentAlignment HorizontalAlignment.Center
         Button.verticalContentAlignment VerticalAlignment.Center
         Button.background (
@@ -904,6 +1121,7 @@ let view (model: Model) (dispatch: Msg -> unit) : IView =
     | NameEntry input -> withSakura model.AnimFrame (nameEntryView input dispatch)
     | MainView -> withSakura model.AnimFrame (mainView model dispatch)
     | InPlayMenu -> withSakura model.AnimFrame (playMenuView model dispatch)
+    | InFoodRoulette state -> withSakura model.AnimFrame (foodRouletteView model state dispatch)
     | InMemoryGame state ->
         memoryView model state dispatch
         |> withWinCelebration model.AnimFrame (MemoryGame.didWin state) dispatch
