@@ -125,19 +125,22 @@ type Sleep = Awake | Asleep
 
 ## Changes from the Proposal
 
-The shipped game keeps every requirement from the original proposal, but the following choices ended up different or expanded during implementation.
+The finalized game keeps every requirement from the original proposal, but the following choices ended up different or expanded during implementation.
 
 ### Two windows instead of one
 The proposal described a single Avalonia window. The final app uses a small transparent floating pet window pinned to the bottom-right of the screen plus a separate main window opened by clicking the floater. The floating pet is always present so the cat feels like a real desktop companion; the main window is summoned only when the user wants to interact with stats or minigames.
 
 ### Persistent save + offline aging
-The proposal had time advance only "while the main pet view is open and ScreenPal is alive." The implementation persists state to `%APPDATA%/ScreenPal/state.json` after every change and runs a tick catch-up at startup so the cat ages during the time the app was closed. This makes the pet feel continuous across sessions rather than resetting each launch.
+The proposal had time advance only while the main pet view is open and ScreenPal is alive. The implementation persists state to `%APPDATA%/ScreenPal/state.json` after every change and runs a tick catch-up at startup so the cat ages during the time the app was closed. This makes the pet feel continuous across sessions rather than resetting each launch.
 
 ### Feeding became a "Food Roulette"
 The proposal said the Feed button would raise hunger toward full. In the final game, pressing Feed opens a spinning food selector with eight foods that give different amounts of hunger. The user spins the roulette and eats whatever it lands on. This adds variety and a small element of chance to feeding without changing its core role.
 
 ### Speech-bubble dialogue system
-Not in the proposal. The cat now shows random speech bubbles on the home screen, during meals, and inside minigames — including gameplay tips for first-time players. This was added to give the pet personality and to teach the user the rules without a separate tutorial.
+The cat now shows random speech bubbles on the home screen, during meals, and inside minigames — including gameplay tips for first-time players. This was added to give the pet personality and to teach the user the rules without a separate tutorial.
+
+### Background music and sound effects
+The app now plays a looping background music track while running, a spinning-wheel sound effect when the food roulette is spinning, and a click sound effect on button presses. This was added to make the game feel more alive and to give immediate audio feedback for the two most interactive moments.
 
 
 ## AI Usage
