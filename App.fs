@@ -74,31 +74,45 @@ let feedDialogues =
        "Hooray, food!"
        "Best human ever 💖" |]
 
-let gameDialogues =
-    [| "Hmm, let me think..."
-       "I got this! 😼"
-       "This is fun!"
-       "Wait, what was that?"
-       "Easy peasy!"
+let memoryGameDialogues =
+    [| "Hmm, think carefully..."
+       "Tip: match two cards with the same symbol!"
+       "Tip: remember where you saw each symbol!"
+       "Tip: every flip costs a try — choose wisely!"
+       "Pawsome moves!"
        "Concentrate... 🧠"
        "Almost there!"
-       "Don't mess up, hooman!"
-       "Pawsome moves!"
-       "Meow-velous!" |]
+       "Tip: find all 6 pairs to win!"
+       "Meow-velous!"
+       "You got this! 😼" |]
+
+let wordGameDialogues =
+    [| "Tip: 🟩 green = right letter, right spot!"
+       "Tip: 🟨 yellow = right letter, wrong spot!"
+       "Tip: ⬜ gray = letter not in the word!"
+       "Tip: must be exactly 5 letters!"
+       "Tip: press Enter to submit your guess!"
+       "Hmm, let me think..."
+       "Meow-rvelous! 😼"
+       "Concentrate... 🧠"
+       "Almost there!"
+       "Don't mess up, human!" |]
 
 let homeDialogues =
     [| "Hi there!"
        "Pet me!"
        "*purr purr*"
-       "Hello, hooman!"
+       "Hello, human!"
        "I love you 💕"
-       "What's up?"
-       "Bored... 😿"
-       "Play with me!"
+       "Tip: feed me when 🍗 hunger drops!"
+       "Tip: click 🌙 sleep to recharge ⚡ energy!"
+       "Tip: play minigames to boost 💖 happiness!"
+       "Tip: if a stat stays critical too long, I'll faint! 😿"
+       "Tip: sleeping doesn't stop hunger — feed me first!"
+       "Tip: winning a minigame makes me extra happy!"
+       "Tip: losing a minigame still cheers me up a little!"
+       "Bored... play with me!"
        "Meow!"
-       "Look at me!"
-       "Hungry?"
-       "Best day ever!"
        "Whatcha doin?"
        "Hehe :3"
        "Yawn..." |]
@@ -275,9 +289,11 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         let m' = withDialogue fed (pickRandom model.Rng feedDialogues)
         m', saveCmd m'
 
-    | GameDialogueTick, InMemoryGame _
+    | GameDialogueTick, InMemoryGame _ ->
+        withDialogue model (pickRandom model.Rng memoryGameDialogues), Cmd.none
+
     | GameDialogueTick, InWordGame _ ->
-        withDialogue model (pickRandom model.Rng gameDialogues), Cmd.none
+        withDialogue model (pickRandom model.Rng wordGameDialogues), Cmd.none
 
     | GameDialogueTick, _ -> model, Cmd.none
 

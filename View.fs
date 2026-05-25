@@ -810,10 +810,105 @@ let private withSakura (animFrame: int) (content: IView) : IView =
         ]
     ] :> IView
 
+// ----- Confetti overlay + win popup -----
+
+let private ConfettiCount = 70
+let private ConfettiCanvasHeight = 760.0
+
+let private confettiColors =
+    [| "#FF5C8A"; "#FFD93D"; "#6BCB77"; "#4D96FF"; "#FF8FAB"; "#A66CFF"; "#FFA94D"; "#22D3EE" |]
+
+let private confettiPiece (x: float) (y: float) (rotation: float) (size: float) (colorHex: string) : IView =
+    Border.create [
+        Border.width size
+        Border.height (size * 0.45)
+        Border.background (SolidColorBrush(Color.Parse(colorHex)) :> IBrush)
+        Border.borderThickness 0.0
+        Border.cornerRadius 1.0
+        Border.renderTransformOrigin (RelativePoint(0.5, 0.5, RelativeUnit.Relative))
+        Border.renderTransform (RotateTransform(rotation))
+        Canvas.left x
+        Canvas.top y
+    ] :> IView
+
+let private confettiOverlay (animFrame: int) : IView =
+    Canvas.create [
+        Canvas.background Brushes.Transparent
+        Canvas.isHitTestVisible false
+        Canvas.children [
+            for i in 0 .. ConfettiCount - 1 do
+                let seedX = float ((i * 97 + 31) % 800)
+                let phase = (animFrame + i * 3) % AnimFrameMod
+                let progress = float phase / float AnimFrameMod
+                let y = progress * (ConfettiCanvasHeight + 80.0) - 40.0
+                let sway = sin (progress * 6.2831853 * 3.0 + float i * 0.9) * 36.0
+                let x = seedX + sway
+                let rot = progress * 720.0 + float (i * 53)
+                let size = 8.0 + float (i % 5) * 2.5
+                let color = confettiColors.[i % confettiColors.Length]
+                confettiPiece x y rot size color
+        ]
+    ] :> IView
+
+let private winPopup (dispatch: Msg -> unit) : IView =
+    Border.create [
+        Border.horizontalAlignment HorizontalAlignment.Center
+        Border.verticalAlignment VerticalAlignment.Center
+        Border.background (SolidColorBrush(Color.Parse("#FFFBEA")) :> IBrush)
+        Border.borderBrush (SolidColorBrush(Color.Parse("#1A1A1A")) :> IBrush)
+        Border.borderThickness 3.0
+        Border.cornerRadius 6.0
+        Border.padding (Thickness(40.0, 30.0, 40.0, 30.0))
+        Border.child (
+            StackPanel.create [
+                StackPanel.spacing 14.0
+                StackPanel.horizontalAlignment HorizontalAlignment.Center
+                StackPanel.children [
+                    TextBlock.create [
+                        TextBlock.text "🎉"
+                        TextBlock.fontSize 60.0
+                        TextBlock.horizontalAlignment HorizontalAlignment.Center
+                    ]
+                    TextBlock.create [
+                        TextBlock.text "You beat the minigame!"
+                        TextBlock.fontSize 22.0
+                        TextBlock.fontWeight FontWeight.Bold
+                        TextBlock.horizontalAlignment HorizontalAlignment.Center
+                    ]
+                    Button.create [
+                        Button.content "Continue"
+                        Button.padding (18.0, 8.0, 18.0, 14.0)
+                        Button.minWidth 160.0
+                        Button.horizontalAlignment HorizontalAlignment.Center
+                        Button.margin (0.0, 8.0, 0.0, 0.0)
+                        Button.onClick (fun _ -> dispatch ExitMinigame)
+                    ]
+                ]
+            ] :> IView
+        )
+    ] :> IView
+
+let private withWinCelebration (animFrame: int) (won: bool) (dispatch: Msg -> unit) (content: IView) : IView =
+    if not won then content
+    else
+        Grid.create [
+            Grid.children [
+                content
+                confettiOverlay animFrame
+                winPopup dispatch
+            ]
+        ] :> IView
+
 let view (model: Model) (dispatch: Msg -> unit) : IView =
     match model.Screen with
     | NameEntry input -> withSakura model.AnimFrame (nameEntryView input dispatch)
     | MainView -> withSakura model.AnimFrame (mainView model dispatch)
     | InPlayMenu -> withSakura model.AnimFrame (playMenuView model dispatch)
-    | InMemoryGame state -> withSakura model.AnimFrame (memoryView model state dispatch)
-    | InWordGame state -> withSakura model.AnimFrame (wordView model state dispatch)
+    | InMemoryGame state ->
+        memoryView model state dispatch
+        |> withWinCelebration model.AnimFrame (MemoryGame.didWin state) dispatch
+        |> withSakura model.AnimFrame
+    | InWordGame state ->
+        wordView model state dispatch
+        |> withWinCelebration model.AnimFrame (WordGame.didWin state) dispatch
+        |> withSakura model.AnimFrame
