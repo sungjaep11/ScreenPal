@@ -10,12 +10,17 @@
   <ItemGroup>
     <Compile Include="Domain.fs" />
     <Compile Include="Logic.fs" />
+    <Compile Include="Persistence.fs" />
     <Compile Include="Words.fs" />
     <Compile Include="WordGame.fs" />
     <Compile Include="MemoryGame.fs" />
     <Compile Include="App.fs" />
     <Compile Include="View.fs" />
     <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="assets/**/*" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +31,7 @@
     <PackageReference Include="Avalonia.FuncUI" Version="1.5.1" />
     <PackageReference Include="Avalonia.FuncUI.Elmish" Version="1.5.1" />
     <PackageReference Include="Elmish" Version="4.2.0" />
+    <PackageReference Include="Tmds.DBus.Protocol" Version="0.93.0" />
   </ItemGroup>
 
 </Project>

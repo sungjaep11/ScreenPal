@@ -9,11 +9,11 @@ let InitialHappiness = 60
 
 let HungerDecayPerTick = 2
 let EnergyDecayPerTickAwake = 1
-let EnergyRecoveryPerTickAsleep = 4
+let EnergyRecoveryPerTickAsleep = 20
 let HappinessDecayPerTick = 2
 
 let CriticalThreshold = 10
-let DeathAfterCriticalTicks = 15
+let DeathAfterCriticalTicks = 24
 
 let HappyThreshold = 80
 let SadThreshold = 25
@@ -23,7 +23,7 @@ let MinigameEnergyCost = 15
 let MinigameWinHappiness = 35
 let MinigameLossHappiness = 15
 
-let TickIntervalMs = 1500.0
+let TickIntervalMs = 1800000.0
 
 type Stats = { Hunger: int; Energy: int; Happiness: int }
 
