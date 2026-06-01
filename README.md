@@ -2,7 +2,9 @@
 
 A desktop pet built with F# / .NET 10, using Avalonia + FuncUI + Elmish.
 
-A pixel-art cat lives on your screen. Feed it, let it sleep, play minigames with it, or just watch it stare back at you. The cat keeps living even when the app is closed — its hunger, energy, and happiness keep ticking down while you are away.
+A pixel-art pet lives on your screen. Feed it, let it sleep, play minigames with it, or just watch it stare back at you. The pet keeps living even when the app is closed — its hunger, energy, and happiness keep ticking down while you are away.
+
+![Home screen](assets/screenshots/home_screen.png)
 
 ## Getting Started
 
@@ -29,11 +31,11 @@ dotnet run
 
 ### The Floating Pet
 
-Clicking on "To Cat" opens a small transparent window to the corner of your screen. Click it to open the main window again. Drag it to reposition.
+Clicking on "To Pet" opens a small transparent window to the corner of your screen. Click it to open the main window again. Drag it to reposition.
 
 ### Stats
 
-Your cat has three stats, each in the range 0–100:
+Your pet has three stats, each in the range 0–100:
 
 | Stat | Behavior |
 |------|----------|
@@ -41,13 +43,13 @@ Your cat has three stats, each in the range 0–100:
 | Energy | Decays while awake, recovers while asleep. Spent on minigames. |
 | Happiness | Decays over time. Boosted by winning minigames. |
 
-If any stat stays below the critical threshold (10) for too long, the cat dies.
-
 ### Actions
 
 - **Feed** — Opens roulette where you randomly get selected a food to eat. Each food gives different amount of hunger to the pet. 
 - **Sleep** — Recovers energy. While sleeping, the pet cannot take any other actions. 
 - **Play** — opens the minigame menu. You can choose between Memory Match and Word Guess. 
+
+![Feed roulette](assets/screenshots/feed.png)
 
 ## Minigames
 
@@ -60,6 +62,8 @@ A grid of 12 face-down cards hides 6 matching pairs of food types. On each turn 
 
 Revealing a pair costs one try either way. You win by clearing all 6 pairs before your tries run out. If tries hit zero first, you lose.
 
+![Memory Match](assets/screenshots/memory_match.png)
+
 ### Word Guess
 
 Guess a hidden 5-letter word. Type 5 letters and press enter (or click Submit). Each letter of the guess is colored by how it compares to the answer:
@@ -70,22 +74,26 @@ Guess a hidden 5-letter word. Type 5 letters and press enter (or click Submit). 
 
 You win by guessing the word before your attempts run out.
 
+![Word Guess](assets/screenshots/word_guess.png)
+
 ### Rewards
 
-Rewards apply when you finish a game (a win or a loss). On finish the cat spends 15 energy, and its happiness changes by:
+Rewards apply when you finish a game (a win or a loss). On finish the pet spends 15 energy, and its happiness changes by:
 
 - **Win** → +35 happiness
-- **Loss** → +15 happiness (cat still had fun)
+- **Loss** → +15 happiness (pet still had fun)
 
 **Quitting** a game before it finishes costs no energy and grants no happiness.
 
 ### Dialogue
 
-The cat shows speech bubbles on the home screen, during meals, and inside minigames.
+The pet shows speech bubbles on the home screen, during meals, and inside minigames.
 
 ### New Game
 
 Clicking `New Game` shows pop-up to reset game. Clicking `Yes, Reset` clears all data and opens a new game. 
+
+![New game](assets/screenshots/new_game.png)
 
 ### Exit
 
@@ -100,9 +108,9 @@ The game ticks every 30 minutes. On each tick:
 - If any stat is critical, a hidden death countdown advances by one.
 - If no stat is critical, the countdown resets to zero.
 
-If a stat stays critical for 24 ticks in a row (12 hours), the cat dies. Pulling every stat back above 10 resets the countdown, so the cat is safe as long as you don't leave it neglected for half a day straight.
+If a stat stays critical for 24 ticks in a row (12 hours), the pet dies. Pulling every stat back above 10 resets the countdown, so the pet is safe as long as you don't leave it neglected for half a day straight.
 
-Because stats keep ticking while the app is closed, the cat can die offline if you leave it in a critical state. Once dead, the only way back is creating a new game.
+Because stats keep ticking while the app is closed, the pet can die offline if you leave it in a critical state. Once dead, the only way back is creating a new game.
 
 ### Save Data
 
@@ -148,16 +156,16 @@ type Sleep = Awake | Asleep
 The finalized game keeps every requirement from the original proposal, but the following choices ended up different or expanded during implementation.
 
 ### Two windows instead of one
-The proposal described a single Avalonia window. The final app uses a small transparent floating movable pet window to the corner of the screen plus a separate main window opened by clicking the floater. I added this floating pet so the cat feels like a real desktop companion.
+The proposal described a single Avalonia window. The final app uses a small transparent floating movable pet window to the corner of the screen plus a separate main window opened by clicking the floater. I added this floating pet so the pet feels like a real desktop companion.
 
 ### Persistent save + offline aging
-The proposal had time advance only while the main pet view is open and ScreenPal is alive. The implementation persists state to `%APPDATA%/ScreenPal/state.json` after every change and runs a tick catch-up at startup so the cat ages during the time the app was closed. I added this to make the pet feel continuous across sessions rather than resetting each launch.
+The proposal had time advance only while the main pet view is open and ScreenPal is alive. The implementation persists state to `%APPDATA%/ScreenPal/state.json` after every change and runs a tick catch-up at startup so the pet ages during the time the app was closed. I added this to make the pet feel continuous across sessions rather than resetting each launch.
 
 ### Feeding became a roulette system
 The proposal said the Feed button would raise hunger toward full. In the final game, pressing Feed opens a spinning food selector with eight foods that give different amounts of hunger. The user spins the roulette and eats whatever it lands on. I added this to increase variety as simply clicking to increase hunger was not very entertaining. 
 
 ### Speech-bubble dialogue system
-The cat now shows random speech bubbles on the home screen, during meals, and inside minigames — including gameplay tips for first-time players. This was added to give the pet personality and to teach the user the rules without a separate tutorial.
+The pet now shows random speech bubbles on the home screen, during meals, and inside minigames — including gameplay tips for first-time players. This was added to give the pet personality and to teach the user the rules without a separate tutorial.
 
 
 ## AI Usage
@@ -166,7 +174,7 @@ I designed the game myself, and used an LLM as a typing assistant for the mechan
 
 ### What I used the LLM for
 - **Turning layout sketches into UI code.** Once I decided what a screen should show and roughly where each element should sit, I described it to the LLM and let it write the actual UI code, so I did not have to memorize the exact name of every button, panel, and layout property.
-- **Loading and slicing the cat sprite images.** The helper that opens a sprite-sheet image and cuts it into the individual animation frames is the kind of repetitive code I described in one sentence and had the LLM write.
+- **Loading and slicing the pet sprite images.** The helper that opens a sprite-sheet image and cuts it into the individual animation frames is the kind of repetitive code I described in one sentence and had the LLM write.
 - **Background plumbing.** The timers that drive the game (stat decay, animation, sleep recovery), the small delays for things like flipping memory cards back over or spinning the food wheel, and the code that reads and writes the save file were all generated from a short description of what each one had to do.
 
 ### What I had to manually change or re-prompt
