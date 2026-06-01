@@ -29,7 +29,7 @@ dotnet run
 
 ### The Floating Pet
 
-A small transparent window pins to the bottom-right of your screen. Click it to open the main window. Drag it to reposition.
+Clicking on "To Cat" opens a small transparent window to the corner of your screen. Click it to open the main window again. Drag it to reposition.
 
 ### Stats
 
@@ -45,22 +45,51 @@ If any stat stays below the critical threshold (10) for too long, the cat dies.
 
 ### Actions
 
-- **Feed** — raises hunger.
-- **Sleep** — recovers energy faster than the awake rate.
-- **Play** — opens the minigame menu.
-
-### Dialogue
-
-The cat pipes up speech bubbles on the home screen, during meals, and inside minigames.
+- **Feed** — Opens roulette where you randomly get selected a food to eat. Each food gives different amount of hunger to the pet. 
+- **Sleep** — Recovers energy. While sleeping, the pet cannot take any other actions. 
+- **Play** — opens the minigame menu. You can choose between Memory Match and Word Guess. 
 
 ## Minigames
 
-| Minigame | Description |
-|----------|-------------|
-| Memory Match | Flip pairs of emoji cards. Number of allowed tries scales with current stats. |
-| Word Guess | Five-letter Wordle-style guesser. Attempts allowed scale with stats. |
+### Memory Match
 
-Winning boosts happiness; losing costs a little. Each attempt spends energy.
+A grid of 12 face-down cards hides 6 matching pairs of food types. On each turn you flip two cards:
+
+- If the two symbols **match**, they stay face-up.
+- If they **don't match**, they flip back over after a short delay.
+
+Revealing a pair costs one try either way. You win by clearing all 6 pairs before your tries run out. If tries hit zero first, you lose.
+
+### Word Guess
+
+Guess a hidden 5-letter word, Wordle-style. Type 5 letters and press enter (or click Submit). Each letter of the guess is colored by how it compares to the answer:
+
+- **green** — correct letter in the correct spot
+- **yellow** — letter is in the word, but in a different spot
+- **gray** — letter is not in the word
+
+You win by guessing the word before your attempts run out.
+
+### Rewards
+
+Rewards apply when you finish a game (a win or a loss). On finish the cat spends 15 energy, and its happiness changes by:
+
+- **Win** → +35 happiness
+- **Loss** → +15 happiness (cat still had fun)
+
+**Quitting** a game before it finishes costs no energy and grants no happiness.
+
+### Dialogue
+
+The cat shows speech bubbles on the home screen, during meals, and inside minigames.
+
+### New Game
+
+Clicking `New Game` shows pop-up to reset game. Clicking `Yes, Reset` clears all data and opens a new game. 
+
+### Exit
+
+Clicking `Exit` quits the game. Game data still saves and progress still continues, so re-opening the game will have offline stats affected. Be careful to make sure your pet doesn't die! 
 
 ## Save Data
 
@@ -105,7 +134,7 @@ type Sleep = Awake | Asleep
 - Hunger, Energy, and Happiness all decay while the cat is awake.
 - Energy recovers only while the cat is asleep.
 - Any stat staying below 10 for too long causes the pet to die.
-- Minigames cost energy; winning gives happiness, losing takes a smaller amount away.
+- Finishing a minigame costs energy; winning gives more happiness, losing still gives a smaller amount.
 - The save file is updated on every state change; the pet ages even while the app is closed.
 - "New Game" deletes the current pet and starts fresh.
 
