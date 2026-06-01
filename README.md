@@ -62,7 +62,7 @@ Revealing a pair costs one try either way. You win by clearing all 6 pairs befor
 
 ### Word Guess
 
-Guess a hidden 5-letter word, Wordle-style. Type 5 letters and press enter (or click Submit). Each letter of the guess is colored by how it compares to the answer:
+Guess a hidden 5-letter word. Type 5 letters and press enter (or click Submit). Each letter of the guess is colored by how it compares to the answer:
 
 - **green** — correct letter in the correct spot
 - **yellow** — letter is in the word, but in a different spot
