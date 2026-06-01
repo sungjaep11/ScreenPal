@@ -436,7 +436,7 @@ let playMenuView (model: Model) (dispatch: Msg -> unit) : IView =
                 StackPanel.horizontalAlignment HorizontalAlignment.Center
                 StackPanel.children [
                     Button.create [
-                        Button.content "🃏 Memory Match"
+                        Button.content "Memory Match"
                         Button.width 280.0
                         Button.padding (16.0, 14.0, 16.0, 20.0)
                         Button.fontSize 16.0
@@ -444,7 +444,7 @@ let playMenuView (model: Model) (dispatch: Msg -> unit) : IView =
                         Button.onClick (fun _ -> dispatch OpenMemoryGame)
                     ]
                     Button.create [
-                        Button.content "🔤 Word Guess"
+                        Button.content "Word Guess"
                         Button.width 280.0
                         Button.padding (16.0, 14.0, 16.0, 20.0)
                         Button.fontSize 16.0
@@ -597,7 +597,7 @@ let foodRouletteView (model: Model) (state: FoodRoulette.State) (dispatch: Msg -
         match state.Phase with
         | FoodRoulette.Ready ->
             Button.create [
-                Button.content "🎰 Spin!"
+                Button.content "Spin"
                 Button.fontFamily pixelFont
                 Button.fontSize 12.0
                 Button.minWidth 160.0
@@ -652,7 +652,7 @@ let foodRouletteView (model: Model) (state: FoodRoulette.State) (dispatch: Msg -
                 StackPanel.verticalAlignment VerticalAlignment.Center
                 StackPanel.children [
                     TextBlock.create [
-                        TextBlock.text "🎰 Snack Time!"
+                        TextBlock.text "Snack Time!"
                         TextBlock.fontFamily pixelFont
                         TextBlock.fontSize 18.0
                         TextBlock.foreground (SolidColorBrush(Color.Parse("#1A1A1A")) :> IBrush)
@@ -722,7 +722,7 @@ let memoryView (model: Model) (state: MemoryGame.State) (dispatch: Msg -> unit) 
     let finished = MemoryGame.isFinished state
     let resultText =
         match state.Result with
-        | Some MemoryGame.Won -> sprintf "🎉 %s is delighted! All pairs found." model.Name
+        | Some MemoryGame.Won -> sprintf "%s is delighted! All pairs found." model.Name
         | Some MemoryGame.Lost -> sprintf "💤 Out of tries. %s had fun anyway." model.Name
         | None -> sprintf "Find all pairs. Tries left: %d" state.TriesLeft
 
@@ -862,9 +862,9 @@ let wordView (model: Model) (state: WordGame.State) (dispatch: Msg -> unit) : IV
     let resultText =
         match state.Result with
         | Some WordGame.Won ->
-            sprintf "🎉 %s is delighted! You got it: %s" model.Name (state.Answer.ToUpperInvariant())
+            sprintf "%s is delighted! You got it: %s" model.Name (state.Answer.ToUpperInvariant())
         | Some WordGame.Lost ->
-            sprintf "💔 Out of attempts. The word was: %s" (state.Answer.ToUpperInvariant())
+            sprintf "Out of attempts. The word was: %s" (state.Answer.ToUpperInvariant())
         | None ->
             sprintf "Guess the 5-letter word. Attempts left: %d" state.AttemptsLeft
 
@@ -941,6 +941,9 @@ let wordView (model: Model) (state: WordGame.State) (dispatch: Msg -> unit) : IV
                                 TextBox.fontSize 16.0
                                 TextBox.isEnabled (not finished)
                                 TextBox.watermark "5 letters"
+                                TextBox.init (fun (tb: TextBox) ->
+                                    Avalonia.Threading.Dispatcher.UIThread.Post(
+                                        fun () -> tb.Focus() |> ignore))
                                 TextBox.onTextChanged (fun t ->
                                     localDispatch (WordGame.InputChanged t))
                                 TextBox.onKeyDown (fun e ->

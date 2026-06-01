@@ -25,6 +25,8 @@ type Model = {
     ShowMain: bool
     ConfirmingNewGame: bool
     Dialogue: (string * System.DateTimeOffset) option
+    GameDialogueIndex: int
+    LastGameDialogueAt: System.DateTimeOffset
 }
 
 type Msg =
@@ -80,14 +82,14 @@ let feedDialogues =
        "Best human ever 💖" |]
 
 let memoryGameDialogues =
-    [| "Hmm, think carefully..."
-       "Tip: match two cards with the same symbol!"
+    [| "Tip: match two cards with the same symbol!"
        "Tip: remember where you saw each symbol!"
        "Tip: every flip costs a try — choose wisely!"
+       "Tip: find all 6 pairs to win!"
+       "Hmm, think carefully..."
        "Pawsome moves!"
        "Concentrate... 🧠"
        "Almost there!"
-       "Tip: find all 6 pairs to win!"
        "Meow-velous!"
        "You got this! 😼" |]
 
@@ -129,6 +131,21 @@ let private withDialogue (model: Model) (text: string) =
     let expires = System.DateTimeOffset.UtcNow.AddSeconds(DialogueDurationSec)
     { model with Dialogue = Some (text, expires) }
 
+// True only once enough time has passed since the last minigame dialogue, so the
+// free-running timer can't stack a second bubble right after the opening one.
+let private gameDialogueDue (model: Model) =
+    let elapsed = (System.DateTimeOffset.UtcNow - model.LastGameDialogueAt).TotalMilliseconds
+    elapsed >= GameDialogueIntervalMs * 0.5
+
+// Shows the next minigame dialogue in order (tips first), advancing the index.
+let private nextGameDialogue (model: Model) (items: string array) =
+    let now = System.DateTimeOffset.UtcNow
+    let text = items.[model.GameDialogueIndex % items.Length]
+    { model with
+        Dialogue = Some (text, now.AddSeconds(DialogueDurationSec))
+        GameDialogueIndex = model.GameDialogueIndex + 1
+        LastGameDialogueAt = now }
+
 let private emptyModel rng =
     { Name = ""
       Stats = initialStats
@@ -142,7 +159,9 @@ let private emptyModel rng =
       LastTickAt = System.DateTimeOffset.UtcNow
       ShowMain = false
       ConfirmingNewGame = false
-      Dialogue = None }
+      Dialogue = None
+      GameDialogueIndex = 0
+      LastGameDialogueAt = System.DateTimeOffset.MinValue }
 
 let private toPersisted (model: Model) : Persistence.Persisted =
     { Name = model.Name
@@ -168,7 +187,9 @@ let private fromPersisted (p: Persistence.Persisted) (rng: System.Random) : Mode
       LastTickAt = p.LastTickAt
       ShowMain = false
       ConfirmingNewGame = false
-      Dialogue = None }
+      Dialogue = None
+      GameDialogueIndex = 0
+      LastGameDialogueAt = System.DateTimeOffset.MinValue }
 
 let private applyOneTick (stats: Stats, life: Life, sleep: Sleep, criticalTicks: int) =
     match life with
@@ -332,11 +353,11 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
         Audio.stopRouletteSpin ()
         { model with Screen = MainView }, Cmd.none
 
-    | GameDialogueTick, InMemoryGame _ ->
-        withDialogue model (pickRandom model.Rng memoryGameDialogues), Cmd.none
+    | GameDialogueTick, InMemoryGame _ when gameDialogueDue model ->
+        nextGameDialogue model memoryGameDialogues, Cmd.none
 
-    | GameDialogueTick, InWordGame _ ->
-        withDialogue model (pickRandom model.Rng wordGameDialogues), Cmd.none
+    | GameDialogueTick, InWordGame _ when gameDialogueDue model ->
+        nextGameDialogue model wordGameDialogues, Cmd.none
 
     | GameDialogueTick, _ -> model, Cmd.none
 
@@ -359,12 +380,14 @@ let update (msg: Msg) (model: Model) : Model * Cmd<Msg> =
     | OpenMemoryGame, InPlayMenu when Logic.canPlayMinigame model.Life model.Sleep ->
         let tries = Logic.memoryTriesFor model.Stats
         let state = MemoryGame.init model.Rng tries
-        { model with Screen = InMemoryGame state }, Cmd.none
+        let m0 = { model with Screen = InMemoryGame state; GameDialogueIndex = 0 }
+        nextGameDialogue m0 memoryGameDialogues, Cmd.none
 
     | OpenWordGame, InPlayMenu when Logic.canPlayMinigame model.Life model.Sleep ->
         let attempts = Logic.wordAttemptsFor model.Stats
         let state = WordGame.init model.Rng attempts
-        { model with Screen = InWordGame state }, Cmd.none
+        let m0 = { model with Screen = InWordGame state; GameDialogueIndex = 0 }
+        nextGameDialogue m0 wordGameDialogues, Cmd.none
 
     | MemoryMsg m, InMemoryGame state ->
         let state', needsUnflip = MemoryGame.update m state
