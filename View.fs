@@ -344,25 +344,34 @@ let mainView (model: Model) (dispatch: Msg -> unit) : IView =
                 StackPanel.children [
                     Button.create [
                         Button.content "🍎 Feed"
-                        Button.width 130.0
+                        Button.width 140.0
+                        Button.height 52.0
                         Button.margin 4.0
-                        Button.padding (12.0, 8.0, 12.0, 14.0)
+                        Button.padding (12.0, 8.0, 12.0, 8.0)
+                        Button.horizontalContentAlignment HorizontalAlignment.Center
+                        Button.verticalContentAlignment VerticalAlignment.Center
                         Button.isEnabled (Logic.canFeed model.Life model.Sleep model.Stats)
                         Button.onClick (fun _ -> dispatch Feed)
                     ]
                     Button.create [
                         Button.content (if asleep then "☀️ Wake" else "🌙 Sleep")
-                        Button.width 130.0
+                        Button.width 140.0
+                        Button.height 52.0
                         Button.margin 4.0
-                        Button.padding (12.0, 8.0, 12.0, 14.0)
+                        Button.padding (12.0, 8.0, 12.0, 8.0)
+                        Button.horizontalContentAlignment HorizontalAlignment.Center
+                        Button.verticalContentAlignment VerticalAlignment.Center
                         Button.isEnabled (Logic.canToggleSleep model.Life)
                         Button.onClick (fun _ -> dispatch ToggleSleep)
                     ]
                     Button.create [
                         Button.content "🎮 Play"
-                        Button.width 130.0
+                        Button.width 140.0
+                        Button.height 52.0
                         Button.margin 4.0
-                        Button.padding (12.0, 8.0, 12.0, 14.0)
+                        Button.padding (12.0, 8.0, 12.0, 8.0)
+                        Button.horizontalContentAlignment HorizontalAlignment.Center
+                        Button.verticalContentAlignment VerticalAlignment.Center
                         Button.isEnabled (Logic.canPlayMinigame model.Life model.Sleep)
                         Button.onClick (fun _ -> dispatch OpenPlayMenu)
                     ]

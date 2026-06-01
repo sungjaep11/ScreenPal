@@ -98,7 +98,11 @@ type App() =
         // text shaping rounds the box a hair shorter (e.g. Linux/macOS vs Windows).
         // Pinning an explicit LineHeight taller than the 16px font guarantees the
         // descenders stay inside the box consistently across operating systems.
-        textBlockStyle.Setters.Add(Setter(TextBlock.LineHeightProperty, 26.0))
+        // Labels that mix an emoji with text (e.g. the "🌙 Sleep"/"🎮 Play" buttons) are
+        // the tightest case: the emoji run's tall ascent pushes the shared baseline down,
+        // so the box must be a few px taller still to keep the text descenders inside it
+        // — otherwise a clipping container like a Button shears off the bottom of p/y/g.
+        textBlockStyle.Setters.Add(Setter(TextBlock.LineHeightProperty, 32.0))
         this.Styles.Add(textBlockStyle)
 
         let buttonStyle = Style(fun s -> s.OfType<Button>())
