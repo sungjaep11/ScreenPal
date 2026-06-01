@@ -93,6 +93,12 @@ type App() =
 
         let textBlockStyle = Style(fun s -> s.OfType<TextBlock>())
         textBlockStyle.Setters.Add(Setter(TextBlock.PaddingProperty, Thickness(0.0, 3.0, 0.0, 4.0)))
+        // Press Start 2P has tight vertical metrics, so the descenders on p/g/y/j sit
+        // right at the edge of the default line box and get clipped on platforms whose
+        // text shaping rounds the box a hair shorter (e.g. Linux/macOS vs Windows).
+        // Pinning an explicit LineHeight taller than the 16px font guarantees the
+        // descenders stay inside the box consistently across operating systems.
+        textBlockStyle.Setters.Add(Setter(TextBlock.LineHeightProperty, 26.0))
         this.Styles.Add(textBlockStyle)
 
         let buttonStyle = Style(fun s -> s.OfType<Button>())
