@@ -4,7 +4,7 @@ A desktop pet built with F# / .NET 10, using Avalonia + FuncUI + Elmish.
 
 A pixel-art pet lives on your screen. Feed it, let it sleep, play minigames with it, or just watch it stare back at you. The pet keeps living even when the app is closed — its hunger, energy, and happiness keep ticking down while you are away.
 
-![Home screen](assets/screenshots/home_screen.png)
+<img src="assets/screenshots/home_screen.png" width="400" alt="Home screen" />
 
 ## Getting Started
 
@@ -49,7 +49,7 @@ Your pet has three stats, each in the range 0–100:
 - **Sleep** — Recovers energy. While sleeping, the pet cannot take any other actions. 
 - **Play** — opens the minigame menu. You can choose between Memory Match and Word Guess. 
 
-![Feed roulette](assets/screenshots/feed.png)
+<img src="assets/screenshots/feed.png" width="400" alt="Feed roulette" />
 
 ## Minigames
 
@@ -62,7 +62,7 @@ A grid of 12 face-down cards hides 6 matching pairs of food types. On each turn 
 
 Revealing a pair costs one try either way. You win by clearing all 6 pairs before your tries run out. If tries hit zero first, you lose.
 
-![Memory Match](assets/screenshots/memory_match.png)
+<img src="assets/screenshots/memory_match.png" width="400" alt="Memory Match" />
 
 ### Word Guess
 
@@ -74,7 +74,7 @@ Guess a hidden 5-letter word. Type 5 letters and press enter (or click Submit). 
 
 You win by guessing the word before your attempts run out.
 
-![Word Guess](assets/screenshots/word_guess.png)
+<img src="assets/screenshots/word_guess.png" width="400" alt="Word Guess" />
 
 ### Rewards
 
@@ -93,7 +93,7 @@ The pet shows speech bubbles on the home screen, during meals, and inside miniga
 
 Clicking `New Game` shows pop-up to reset game. Clicking `Yes, Reset` clears all data and opens a new game. 
 
-![New game](assets/screenshots/new_game.png)
+<img src="assets/screenshots/new_game.png" width="400" alt="New game" />
 
 ### Exit
 
