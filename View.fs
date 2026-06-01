@@ -324,7 +324,7 @@ let mainView (model: Model) (dispatch: Msg -> unit) : IView =
                         Button.onClick (fun _ -> dispatch OpenNewGameConfirm)
                     ]
                     Button.create [
-                        Button.content "To Cat"
+                        Button.content "To Pet"
                         Button.margin (8.0, 0.0, 0.0, 0.0)
                         Button.onClick (fun _ -> dispatch HideMainWindow)
                     ]
