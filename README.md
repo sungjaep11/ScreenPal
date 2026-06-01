@@ -91,7 +91,20 @@ Clicking `New Game` shows pop-up to reset game. Clicking `Yes, Reset` clears all
 
 Clicking `Exit` quits the game. Game data still saves and progress still continues, so re-opening the game will have offline stats affected. Be careful to make sure your pet doesn't die! 
 
-## Save Data
+### Death
+
+A stat is **critical** when Hunger, Energy, or Happiness drops to 10 or below.
+
+The game ticks every 30 minutes. On each tick:
+
+- If any stat is critical, a hidden death countdown advances by one.
+- If no stat is critical, the countdown resets to zero.
+
+If a stat stays critical for 24 ticks in a row (12 hours), the cat dies. Pulling every stat back above 10 resets the countdown, so the cat is safe as long as you don't leave it neglected for half a day straight.
+
+Because stats keep ticking while the app is closed, the cat can die offline if you leave it in a critical state. Once dead, the only way back is creating a new game.
+
+### Save Data
 
 State is written to `%APPDATA%/ScreenPal/state.json` after every change. Tick catch-up runs at startup, so closing and reopening the app still ages your pet by however long you were away. "New Game" wipes the current pet and starts over.
 
@@ -129,14 +142,6 @@ type Life = Alive | Dead
 type Sleep = Awake | Asleep
 ```
 
-## Rules Summary
-
-- Hunger, Energy, and Happiness all decay while the cat is awake.
-- Energy recovers only while the cat is asleep.
-- Any stat staying below 10 for too long causes the pet to die.
-- Finishing a minigame costs energy; winning gives more happiness, losing still gives a smaller amount.
-- The save file is updated on every state change; the pet ages even while the app is closed.
-- "New Game" deletes the current pet and starts fresh.
 
 ## Changes from the Proposal
 
