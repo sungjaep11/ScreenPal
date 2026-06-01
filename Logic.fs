@@ -40,13 +40,16 @@ let canToggleSleep life =
 let canPlayMinigame life sleep =
     life = Alive && sleep = Awake
 
+// Minigame chances scale with the cat's overall wellbeing — the average of all
+// three stats (0–100) — so feeding, sleeping, and winning all visibly change it.
+let wellbeing stats =
+    (stats.Hunger + stats.Energy + stats.Happiness) / 3
+
 let memoryTriesFor stats =
-    let bonus = (stats.Happiness + stats.Energy) / 40
-    8 + bonus
+    6 + wellbeing stats / 12        // 6–14 tries
 
 let wordAttemptsFor stats =
-    let bonus = (stats.Happiness + stats.Energy) / 50
-    5 + bonus
+    4 + wellbeing stats / 20        // 4–9 attempts
 
 let applyMinigameResult won stats =
     let happinessGain =
