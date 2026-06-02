@@ -47,6 +47,23 @@ let mutable private spinPlayer : MediaPlayer option = None
 // ----- CLI fallback player (macOS / Linux, or anywhere LibVLC fails to load) -----
 
 let private isMac = RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+let private isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+
+module WinMM =
+    [<DllImport("winmm.dll", EntryPoint = "mciSendStringW", CharSet = CharSet.Unicode)>]
+    extern int mciSendString(string lpstrCommand, string lpstrReturnString, int uReturnLength, nativeint hwndCallback)
+
+    let play (alias: string) (path: string) (volume: float) (loop: bool) =
+        mciSendString(sprintf "close %s" alias, null, 0, 0n) |> ignore
+        mciSendString(sprintf "open \"%s\" type mpegvideo alias %s" path alias, null, 0, 0n) |> ignore
+        let vol = int (volume * 1000.0)
+        mciSendString(sprintf "setaudio %s volume to %d" alias vol, null, 0, 0n) |> ignore
+        let repeatStr = if loop then " repeat" else ""
+        mciSendString(sprintf "play %s%s" alias repeatStr, null, 0, 0n) |> ignore
+        
+    let stop (alias: string) =
+        mciSendString(sprintf "stop %s" alias, null, 0, 0n) |> ignore
+        mciSendString(sprintf "close %s" alias, null, 0, 0n) |> ignore
 
 // Resolve a CLI audio player once. macOS always has afplay; on Linux we probe for a few
 // common players (preferring ones that handle mp3 and support a volume flag).
@@ -162,6 +179,8 @@ let stopBackgroundMusic () =
             bgPlayer <- None
             disposePlayer mp
         | None -> ()
+    else if isWindows then
+        WinMM.stop "bg"
     else
         match bgCliCts with
         | Some cts -> (try cts.Cancel() with _ -> ()); bgCliCts <- None
@@ -187,6 +206,8 @@ let playBackgroundMusic () =
                     bgPlayer <- Some mp
                 with _ -> ()
             | _ -> ()
+        else if isWindows then
+            WinMM.play "bg" path 0.35 true
         else
             // Already looping?
             match bgCliCts with
@@ -217,6 +238,8 @@ let stopRouletteSpin () =
             spinPlayer <- None
             disposePlayer mp
         | None -> ()
+    else if isWindows then
+        WinMM.stop "spin"
     else
         match spinCliProc with
         | Some p -> spinCliProc <- None; killProcess p
@@ -238,6 +261,8 @@ let playRouletteSpin () =
                     spinPlayer <- Some mp
                 with _ -> ()
             | None -> ()
+        else if isWindows then
+            WinMM.play "spin" path 0.7 false
         else
             spinCliProc <- startCliPlayer path 0.7
 
@@ -258,5 +283,8 @@ let playButtonPress () =
                     mp.Play(media) |> ignore
                 with _ -> ()
             | None -> ()
+        else if isWindows then
+            let alias = sprintf "click_%d" (Environment.TickCount)
+            WinMM.play alias path 0.8 false
         else
             startCliOneShot path 0.8
